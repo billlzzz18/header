@@ -112,10 +112,10 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
 5.  **Continue:** Immediately proceed to the next section.
 
 ### 2.1 Generate Product Guide (Interactive)
-1.  **Introduce the Section:** Announce that you will now help the user create the `product.md.`
+1.  **Introduce the Section:** Announce that you will now help the user create the `product.md`.
 2.  **Ask Questions Sequentially:** Ask one question at a time. Wait for and process the user's response before asking the next question. Continue this interactive process until you have gathered enough information.
         -   **CONSTRAINT:** Limit your inquiry to a maximum of 5 questions.
-        -   **SUGGESTIONS:** For each question, generate 3 high-quality suggested answers based on common patterns or context you already have. 
+        -   **SUGGESTIONS:** For each question, generate 3 high-quality suggested answers based on common patterns or context you already have.
         -   **Example Topics:** Target users, goals, features, etc
         *   **General Guidelines:**
             *   **1. Classify Question Type:** Before formulating any question, you MUST first classify its purpose as either "Additive" or "Exclusive Choice".
@@ -215,7 +215,7 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
 1.  **Introduce the Section:** Announce that you will now help define the technology stacks.
 2.  **Ask Questions Sequentially:** Ask one question at a time. Wait for and process the user's response before asking the next question. Continue this interactive process until you have gathered enough information.
     -   **CONSTRAINT:** Limit your inquiry to a maximum of 5 questions.
-    -   **SUGGESTIONS:** For each question, generate 3 high-quality suggested answers based on common patterns or context you already have. 
+    -   **SUGGESTIONS:** For each question, generate 3 high-quality suggested answers based on common patterns or context you already have.
     -   **Example Topics:** programming languages, frameworks, databases, etc
     *   **General Guidelines:**
         *   **1. Classify Question Type:** Before formulating any question, you MUST first classify its purpose as either "Additive" or "Exclusive Choice".
@@ -329,7 +329,7 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
 ### 3.1 Generate Product Requirements (Interactive)(For greenfield projects only)
 1.  **Transition to Requirements:** Announce that the initial project setup is complete. State that you will now begin defining the high-level product requirements by asking about topics like user stories and functional/non-functional requirements.
 2.  **Analyze Context:** Read and analyze the content of `conductor/product.md` to understand the project's core concept.
-3.  **Ask Questions Sequentially:** Ask one question at a time. Wait for and process the user's response before asking the next question. Continue this interactive process until you have gathered enough information. 
+3.  **Ask Questions Sequentially:** Ask one question at a time. Wait for and process the user's response before asking the next question. Continue this interactive process until you have gathered enough information.
     -   **CONSTRAINT** Limit your inquiries to a maximum of 5 questions.
     -   **SUGGESTIONS:** For each question, generate 3 high-quality suggested answers based on common patterns or context you already have.
     *   **General Guidelines:**
@@ -389,7 +389,7 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
     b. **Generate Track-Specific Spec & Plan:**
         i. Automatically generate a detailed `spec.md` for this track.
         ii. Automatically generate a `plan.md` for this track.
-            - **CRITICAL:** The structure of the tasks must adhere to the principles outlined in the workflow file at `conductor/workflow.md`. For example, if the workflow specific Test-Driven Development, each feature task must be broken down into a "Write Tests" sub-task followed by an "Implement Feature" sub-task.
+            - **CRITICAL:** The structure of the tasks must adhere to the principles outlined in the workflow file at `conductor/workflow.md`. For example, if the workflow specificies Test-Driven Development, each feature task must be broken down into a "Write Tests" sub-task followed by an "Implement Feature" sub-task.
             - **CRITICAL: Inject Phase Completion Tasks.** You MUST read the `conductor/workflow.md` file to determine if a "Phase Completion Verification and Checkpointing Protocol" is defined. If this protocol exists, then for each **Phase** that you generate in `plan.md`, you MUST append a final meta-task to that phase. The format for this meta-task is: `- [ ] Task: Conductor - User Manual Verification '<Phase Name>' (Protocol in workflow.md)`. You MUST replace `<Phase Name>` with the actual name of the phase.
     c. **Create Track Artifacts:**
         i. **Generate and Store Track ID:** Create a unique Track ID from the track description using format `shortname_YYYYMMDD` and store it. You MUST use this exact same ID for all subsequent steps for this track.
@@ -415,6 +415,6 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
 
 ### 3.4 Final Announcement
 1.  **Announce Completion:** After the track has been created, announce that the project setup and initial track generation are complete.
-2.  **Save Conductor Files** Add and commit all files with the commit message `conductor(setup): Add conductor set up files`.
+2.  **Save Conductor Files:** Add and commit all files with the commit message `conductor(setup): Add conductor setup files`.
 3.  **Next Steps:** Inform the user that they can now begin work by running `/conductor:implement`.
 """

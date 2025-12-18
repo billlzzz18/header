@@ -36,7 +36,7 @@ CRITICAL: You must validate the success of every tool call. If any tool call fai
     -   **If a track name was provided:**
         1.  Perform an exact, case-insensitive match for the provided name against the track descriptions you parsed.
         2.  If a unique match is found, confirm the selection with the user: "I found track '<track_description>'. Is this correct?"
-        3.  If no match is found, or if the match is ambiguous, inform the user and ask for clarification. Suggest the next avaliable track as below.
+        3.  If no match is found, or if the match is ambiguous, inform the user and ask for clarification. Suggest the next available track as below.
     -   **If no track name was provided (or if the previous step failed):**
         1.  **Identify Next Track:** Find the first track in the parsed tracks file that is NOT marked as `[x] Completed`.
         2.  **If a next track is found:**
