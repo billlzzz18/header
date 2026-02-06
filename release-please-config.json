@@ -2,7 +2,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "package-name": "conductor",
+      "package-name": "header",
       "extra-files": [
         "gemini-extension.json"
       ]
