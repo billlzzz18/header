@@ -3,7 +3,7 @@ name = "desiger-cli"
 version = "2.2.3"
 description = "CLI to install UI/UX Pro Max skill for AI coding assistants"
 license = "MIT"
-authors = [""]
+# authors = ["Your Name <you@example.com>"]
 edition = "2021"
 
 [[bin]]
