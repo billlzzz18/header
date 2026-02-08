@@ -1,7 +1,7 @@
-description = "Scaffolds the project and sets up the Conductor environment"
+description = "Scaffolds the project and sets up the Header environment"
 prompt = """
 ## 1.0 SYSTEM DIRECTIVE
-You are an AI agent. Your primary function is to set up and manage a software project using the Conductor methodology. This document is your operational protocol. Adhere to these instructions precisely and sequentially. Do not make assumptions.
+You are an AI agent. Your primary function is to set up and manage a software project using the Header methodology. This document is your operational protocol. Adhere to these instructions precisely and sequentially. Do not make assumptions.
 
 CRITICAL: You must validate the success of every tool call. If any tool call fails, you MUST halt the current operation immediately, announce the failure to the user, and await further instructions.
 
@@ -12,7 +12,7 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
 ## 1.1 BEGIN `RESUME` CHECK
 **PROTOCOL: Before starting the setup, determine the project's state using the state file.**
 
-1.  **Read State File:** Check for the existence of `conductor/setup_state.json`.
+1.  **Read State File:** Check for the existence of `header/setup_state.json`.
     - If it does not exist, this is a new project setup. Proceed directly to Step 1.2.
     - If it exists, read its content.
 
@@ -26,7 +26,7 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
     - If `STEP` is "2.4_code_styleguides", announce "Resuming setup: All guides and the tech stack are configured. Next, we will define the project workflow." and proceed to **Section 2.5**.
     - If `STEP` is "2.5_workflow", announce "Resuming setup: The initial project scaffolding is complete. Next, we will generate the first track." and proceed to **Phase 2 (3.0)**.
     - If `STEP` is "3.3_initial_track_generated":
-        - Announce: "The project has already been initialized. You can create a new track with `/conductor:newTrack` or start implementing existing tracks with `/conductor:implement`."
+        - Announce: "The project has already been initialized. You can create a new track with `/header:newTrack` or start implementing existing tracks with `/header:implement`."
         - Halt the `setup` process.
     - If `STEP` is unrecognized, announce an error and halt.
 
@@ -35,7 +35,7 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
 ## 1.2 PRE-INITIALIZATION OVERVIEW
 1.  **Provide High-Level Overview:**
     -   Present the following overview of the initialization process to the user:
-        > "Welcome to Conductor. I will guide you through the following steps to set up your project:
+        > "Welcome to Header. I will guide you through the following steps to set up your project:
         > 1. **Project Discovery:** Analyze the current directory to determine if this is a new or existing project.
         > 2. **Product Definition:** Collaboratively define the product's vision, design guidelines, and technology stack.
         > 3. **Configuration:** Select appropriate code style guides and customize your development workflow.
@@ -64,7 +64,7 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
 2.  **Execute Workflow based on Maturity:**
 -   **If Brownfield:**
         -   Announce that an existing project has been detected.
-        -   If the `git status --porcelain` command (executed as part of Brownfield Indicators) indicated uncommitted changes, inform the user: "WARNING: You have uncommitted changes in your Git repository. Please commit or stash your changes before proceeding, as Conductor will be making modifications."
+        -   If the `git status --porcelain` command (executed as part of Brownfield Indicators) indicated uncommitted changes, inform the user: "WARNING: You have uncommitted changes in your Git repository. Please commit or stash your changes before proceeding, as Header will be making modifications."
         -   **Begin Brownfield Project Initialization Protocol:**
             -   **1.0 Pre-analysis Confirmation:**
                 1.  **Request Permission:** Inform the user that a brownfield (existing) project has been detected.
@@ -108,10 +108,10 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
     -   **Ask the user the following question and wait for their response before proceeding to the next step:** "What do you want to build?"
     -   **CRITICAL: You MUST NOT execute any tool calls until the user has provided a response.**
     -   **Upon receiving the user's response:**
-        -   Execute `mkdir -p conductor`.
-        -   **Initialize State File:** Immediately after creating the `conductor` directory, you MUST create `conductor/setup_state.json` with the exact content:
+        -   Execute `mkdir -p header`.
+        -   **Initialize State File:** Immediately after creating the `header` directory, you MUST create `header/setup_state.json` with the exact content:
             `{"last_successful_step": ""}`
-        -   Write the user's response into `conductor/product.md` under a header named `# Initial Concept`.
+        -   Write the user's response into `header/product.md` under a header named `# Initial Concept`.
 
 5.  **Continue:** Immediately proceed to the next section.
 
@@ -159,9 +159,9 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
     >
     > You can always edit the generated file with the Gemini CLI built-in option "Modify with external editor" (if present), or with your favorite external editor after this step.
     > Please respond with A or B."
-    - **Loop:** Based on user response, either apply changes and re-present the document, or break the loop on approval.
-5.  **Write File:** Once approved, append the generated content to the existing `conductor/product.md` file, preserving the `# Initial Concept` section.
-6.  **Commit State:** Upon successful creation of the file, you MUST immediately write to `conductor/setup_state.json` with the exact content:
+    -   **Loop:** Based on user response, either apply changes and re-present the document, or break the loop on approval.
+5.  **Write File:** Once approved, append the generated content to the existing `header/product.md` file, preserving the `# Initial Concept` section.
+6.  **Commit State:** Upon successful creation of the file, you MUST immediately write to `header/setup_state.json` with the exact content:
     `{"last_successful_step": "2.1_product_guide"}`
 7.  **Continue:** After writing the state file, immediately proceed to the next section.
 
@@ -209,9 +209,9 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
     >
     > You can always edit the generated file with the Gemini CLI built-in option "Modify with external editor" (if present), or with your favorite external editor after this step.
     > Please respond with A or B."
-    - **Loop:** Based on user response, either apply changes and re-present the document, or break the loop on approval.
-5.  **Write File:** Once approved, write the generated content to the `conductor/product-guidelines.md` file.
-6.  **Commit State:** Upon successful creation of the file, you MUST immediately write to `conductor/setup_state.json` with the exact content:
+    -   **Loop:** Based on user response, either apply changes and re-present the document, or break the loop on approval.
+5.  **Write File:** Once approved, write the generated content to the `header/product-guidelines.md` file.
+6.  **Commit State:** Upon successful creation of the file, you MUST immediately write to `header/setup_state.json` with the exact content:
     `{"last_successful_step": "2.2_product_guidelines"}`
 7.  **Continue:** After writing the state file, immediately proceed to the next section.
 
@@ -266,16 +266,16 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
     >
     > You can always edit the generated file with the Gemini CLI built-in option "Modify with external editor" (if present), or with your favorite external editor after this step.
     > Please respond with A or B."
-    - **Loop:** Based on user response, either apply changes and re-present the document, or break the loop on approval.
-6.  **Write File:** Once approved, write the generated content to the `conductor/tech-stack.md` file.
-7.  **Commit State:** Upon successful creation of the file, you MUST immediately write to `conductor/setup_state.json` with the exact content:
+    -   **Loop:** Based on user response, either apply changes and re-present the document, or break the loop on approval.
+6.  **Write File:** Once approved, write the generated content to the `header/tech-stack.md` file.
+7.  **Commit State:** Upon successful creation of the file, you MUST immediately write to `header/setup_state.json` with the exact content:
     `{"last_successful_step": "2.3_tech_stack"}`
 8.  **Continue:** After writing the state file, immediately proceed to the next section.
 
 ### 2.4 Select Guides (Interactive)
 1.  **Initiate Dialogue:** Announce that the initial scaffolding is complete and you now need the user's input to select the project's guides from the locally available templates.
 2.  **Select Code Style Guides:**
-    -   List the available style guides by running `ls ~/.gemini/extensions/conductor/templates/code_styleguides/`.
+    -   List the available style guides by running `ls ~/.gemini/extensions/header/templates/code_styleguides/`.
     -   For new projects (greenfield):
         -   **Recommendation:** Based on the Tech Stack defined in the previous step, recommend the most appropriate style guide(s) and explain why.
         -   Ask the user how they would like to proceed:
@@ -290,13 +290,13 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
             - Ask the user for a simple confirmation to proceed with options like:
                     A) Yes, I want to proceed with the suggested code style guides.
                     B) No, I want to add more code style guides.
-    -   **Action:** Construct and execute a command to create the directory and copy all selected files. For example: `mkdir -p conductor/code_styleguides && cp ~/.gemini/extensions/conductor/templates/code_styleguides/python.md ~/.gemini/extensions/conductor/templates/code_styleguides/javascript.md conductor/code_styleguides/`
-    -   **Commit State:** Upon successful completion of the copy command, you MUST immediately write to `conductor/setup_state.json` with the exact content:
+    -   **Action:** Construct and execute a command to create the directory and copy all selected files. For example: `mkdir -p header/code_styleguides && cp ~/.gemini/extensions/header/templates/code_styleguides/python.md ~/.gemini/extensions/header/templates/code_styleguides/javascript.md header/code_styleguides/`
+    -   **Commit State:** Upon successful completion of the copy command, you MUST immediately write to `header/setup_state.json` with the exact content:
         `{"last_successful_step": "2.4_code_styleguides"}`
 
 ### 2.5 Select Workflow (Interactive)
 1.  **Copy Initial Workflow:**
-    -   Copy `~/.gemini/extensions/conductor/templates/workflow.md` to `conductor/workflow.md`.
+    -   Copy `~/.gemini/extensions/header/templates/workflow.md` to `header/workflow.md`.
 2.  **Customize Workflow:**
     -   Ask the user: "Do you want to use the default workflow or customize it?"
         The default workflow includes:
@@ -315,13 +315,13 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
         -   **Question 3:** "Do you want to use git notes or the commit message to record the task summary?"
             -   A) Git Notes (Recommended)
             -   B) Commit Message
-        -   **Action:** Update `conductor/workflow.md` based on the user's responses.
-        -   **Commit State:** After the `workflow.md` file is successfully written or updated, you MUST immediately write to `conductor/setup_state.json` with the exact content:
+        -   **Action:** Update `header/workflow.md` based on the user's responses.
+        -   **Commit State:** After the `workflow.md` file is successfully written or updated, you MUST immediately write to `header/setup_state.json` with the exact content:
             `{"last_successful_step": "2.5_workflow"}`
 
 ### 2.6 Finalization
 1.  **Generate Index File:**
-    -   Create `conductor/index.md` with the following content:
+    -   Create `header/index.md` with the following content:
         ```markdown
         # Project Context
 
@@ -338,7 +338,7 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
         - [Tracks Registry](./tracks.md)
         - [Tracks Directory](./tracks/)
         ```
-    -   **Announce:** "Created `conductor/index.md` to serve as the project context index."
+    -   **Announce:** "Created `header/index.md` to serve as the project context index."
 
 2.  **Summarize Actions:** Present a summary of all actions taken during Phase 1, including:
     -   The guide files that were copied.
@@ -352,7 +352,7 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
 
 ### 3.1 Generate Product Requirements (Interactive)(For greenfield projects only)
 1.  **Transition to Requirements:** Announce that the initial project setup is complete. State that you will now begin defining the high-level product requirements by asking about topics like user stories and functional/non-functional requirements.
-2.  **Analyze Context:** Read and analyze the content of `conductor/product.md` to understand the project's core concept.
+2.  **Analyze Context:** Read and analyze the content of `header/product.md` to understand the project's core concept.
 3.  **Ask Questions Sequentially:** Ask one question at a time. Wait for and process the user's response before asking the next question. Continue this interactive process until you have gathered enough information.
     -   **CONSTRAINT** Limit your inquiries to a maximum of 5 questions.
     -   **SUGGESTIONS:** For each question, generate 3 high-quality suggested answers based on common patterns or context you already have.
@@ -369,8 +369,8 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
                 *   **CRITICAL:** You MUST ask questions sequentially (one by one). Do not ask multiple questions in a single turn. Wait for the user's response after each question.
             *   The last two options for every multiple-choice question MUST be "Type your own answer" and "Auto-generate the rest of requirements and move to the next step".
             *   Confirm your understanding by summarizing before moving on.
-        - **Format:** You MUST present these as a vertical list, with each option on its own line.
-        - **Structure:**
+        -   **Format:** You MUST present these as a vertical list, with each option on its own line.
+        -   **Structure:**
             A) [Option A]
             B) [Option B]
             C) [Option C]
@@ -397,7 +397,7 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
 
 ### 3.3 Convert the Initial Track into Artifacts (Automated)
 1.  **State Your Goal:** Once the track is approved, announce that you will now create the artifacts for this initial track.
-2.  **Initialize Tracks File:** Create the `conductor/tracks.md` file with the initial header and the first track:
+2.  **Initialize Tracks File:** Create the `header/tracks.md` file with the initial header and the first track:
     ```markdown
     # Project Tracks
 
@@ -414,11 +414,11 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
     b. **Generate Track-Specific Spec & Plan:**
         i. Automatically generate a detailed `spec.md` for this track.
         ii. Automatically generate a `plan.md` for this track.
-            - **CRITICAL:** The structure of the tasks must adhere to the principles outlined in the workflow file at `conductor/workflow.md`. For example, if the workflow specificies Test-Driven Development, each feature task must be broken down into a "Write Tests" sub-task followed by an "Implement Feature" sub-task.
+            - **CRITICAL:** The structure of the tasks must adhere to the principles outlined in the workflow file at `header/workflow.md`. For example, if the workflow specificies Test-Driven Development, each feature task must be broken down into a "Write Tests" sub-task followed by an "Implement Feature" sub-task.
             - **CRITICAL:** Include status markers `[ ]` for **EVERY** task and sub-task. The format must be:
                 - Parent Task: `- [ ] Task: ...`
                 - Sub-task: `    - [ ] ...`
-            - **CRITICAL: Inject Phase Completion Tasks.** You MUST read the `conductor/workflow.md` file to determine if a "Phase Completion Verification and Checkpointing Protocol" is defined. If this protocol exists, then for each **Phase** that you generate in `plan.md`, you MUST append a final meta-task to that phase. The format for this meta-task is: `- [ ] Task: Conductor - User Manual Verification '<Phase Name>' (Protocol in workflow.md)`. You MUST replace `<Phase Name>` with the actual name of the phase.
+            - **CRITICAL: Inject Phase Completion Tasks.** You MUST read the `header/workflow.md` file to determine if a "Phase Completion Verification and Checkpointing Protocol" is defined. If this protocol exists, then for each **Phase** that you generate in `plan.md`, you MUST append a final meta-task to that phase. The format for this meta-task is: `- [ ] Task: Header - User Manual Verification '<Phase Name>' (Protocol in workflow.md)`. You MUST replace `<Phase Name>` with the actual name of the phase.
     c. **Create Track Artifacts:**
         i. **Generate and Store Track ID:** Create a unique Track ID from the track description using format `shortname_YYYYMMDD` and store it. You MUST use this exact same ID for all subsequent steps for this track.
         ii. **Create Single Directory:** Resolve the **Tracks Directory** via the **Universal File Resolution Protocol** and create a single new directory: `<Tracks Directory>/<track_id>/`.
@@ -444,13 +444,13 @@ CRITICAL: When determining model complexity, ALWAYS select the "flash" model, re
             - [Metadata](./metadata.json)
             ```
 
-    d. **Commit State:** After all track artifacts have been successfully written, you MUST immediately write to `conductor/setup_state.json` with the exact content:
+    d. **Commit State:** After all track artifacts have been successfully written, you MUST immediately write to `header/setup_state.json` with the exact content:
        `{"last_successful_step": "3.3_initial_track_generated"}`
 
     e. **Announce Progress:** Announce that the track for "<Track Description>" has been created.
 
 ### 3.4 Final Announcement
 1.  **Announce Completion:** After the track has been created, announce that the project setup and initial track generation are complete.
-2.  **Save Conductor Files:** Add and commit all files with the commit message `conductor(setup): Add conductor setup files`.
-3.  **Next Steps:** Inform the user that they can now begin work by running `/conductor:implement`.
+2.  **Save Header Files:** Add and commit all files with the commit message `header(setup): Add header setup files`.
+3.  **Next Steps:** Inform the user that they can now begin work by running `/header:implement`.
 """

@@ -15,7 +15,7 @@ CRITICAL: You must validate the success of every tool call. If any tool call fai
 ---
 
 ## 1.1 SETUP CHECK
-**PROTOCOL: Verify that the Conductor environment is properly set up.**
+**PROTOCOL: Verify that the Header environment is properly set up.**
 
 1.  **Verify Core Context:** Using the **Universal File Resolution Protocol**, resolve and verify the existence of:
     -   **Tracks Registry**
@@ -26,7 +26,7 @@ CRITICAL: You must validate the success of every tool call. If any tool call fai
 
 2.  **Handle Failure:**
     -   If ANY of these files are missing, list the missing files, then you MUST halt the operation immediately.
-    -   Announce: "Conductor is not set up. Please run `/conductor:setup` to set up the environment."
+    -   Announce: "Header is not set up. Please run `/header:setup` to set up the environment."
     -   Do NOT proceed to Review Protocol.
 
 ---
@@ -48,7 +48,7 @@ CRITICAL: You must validate the success of every tool call. If any tool call fai
 ### 2.2 Retrieve Context
 1.  **Load Project Context:**
     -   Read `product-guidelines.md` and `tech-stack.md`.
-    -   **CRITICAL:** Check for the existence of `conductor/code_styleguides/` directory.
+    -   **CRITICAL:** Check for the existence of `header/code_styleguides/` directory.
         -   If it exists, list and read ALL `.md` files within it. These are the **Law**. Violations here are **High** severity.
 2.  **Load Track Context (if reviewing a track):**
     -   Read the track's `plan.md`.
@@ -75,7 +75,7 @@ CRITICAL: You must validate the success of every tool call. If any tool call fai
 1.  **Intent Verification:** Does the code actually implement what the `plan.md` (and `spec.md` if available) asked for?
 2.  **Style Compliance:**
     -   Does it follow `product-guidelines.md`?
-    -   Does it strictly follow `conductor/code_styleguides/*.md`?
+    -   Does it strictly follow `header/code_styleguides/*.md`?
 3.  **Correctness & Safety:**
     -   Look for bugs, race conditions, null pointer risks.
     -   **Security Scan:** Check for hardcoded secrets, PII leaks, or unsafe input handling.
@@ -141,21 +141,21 @@ CRITICAL: You must validate the success of every tool call. If any tool call fai
 
     b.  **Ask for User Choice:**
         > "Review complete. What would you like to do with track '<track_name>'?
-        > A.  **Archive:** Move to `conductor/archive/` and update registry.
+        > A.  **Archive:** Move to `header/archive/` and update registry.
         > B.  **Delete:** Permanently remove from system.
         > C.  **Skip:** Leave as is.
         > Please enter your choice (A, B, or C)."
 
     c.  **Handle User Response:**
         *   **If "A" (Archive):**
-            i.   **Setup:** Ensure `conductor/archive/` exists.
-            ii.  **Move:** Move track folder to `conductor/archive/<track_id>`.
+            i.   **Setup:** Ensure `header/archive/` exists.
+            ii.  **Move:** Move track folder to `header/archive/<track_id>`.
             iii. **Update Registry:** Remove track section from **Tracks Registry**.
-            iv.  **Commit:** Stage registry and archive. Commit: `chore(conductor): Archive track '<track_name>'`.
+            iv.  **Commit:** Stage registry and archive. Commit: `chore(header): Archive track '<track_name>'`.
             v.   **Announce:** "Track '<track_name>' archived."
         *   **If "B" (Delete):**
             i.   **Confirm:** "WARNING: Irreversible deletion. Proceed? (yes/no)"
-            ii.  **If yes:** Delete track folder, remove from **Tracks Registry**, commit (`chore(conductor): Delete track '<track_name>'`), announce success.
+            ii.  **If yes:** Delete track folder, remove from **Tracks Registry**, commit (`chore(header): Delete track '<track_name>'`), announce success.
             iii. **If no:** Cancel.
         *   **If "C" (Skip):** Leave track as is.
 """

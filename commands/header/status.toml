@@ -9,17 +9,18 @@ CRITICAL: You must validate the success of every tool call. If any tool call fai
 
 
 ## 1.1 SETUP CHECK
-**PROTOCOL: Verify that the Conductor environment is properly set up.**
+**PROTOCOL: Verify that the Header environment is properly set up.**
 
 1.  **Verify Core Context:** Using the **Universal File Resolution Protocol**, resolve and verify the existence of:
     -   **Tracks Registry**
     -   **Product Definition**
+    -   **Product Guidelines**
     -   **Tech Stack**
     -   **Workflow**
 
 2.  **Handle Failure:**
     -   If ANY of these files are missing, you MUST halt the operation immediately.
-    -   Announce: "Conductor is not set up. Please run `/conductor:setup` to set up the environment."
+    -   Announce: "Header is not set up. Please run `/header:setup` to set up the environment."
     -   Do NOT proceed to Status Overview Protocol.
 
 ---
@@ -33,6 +34,7 @@ CRITICAL: You must validate the success of every tool call. If any tool call fai
     -   Parse the **Tracks Registry** to identify all registered tracks and their paths.
         *   **Parsing Logic:** When reading the **Tracks Registry** to identify tracks, look for lines matching either the new standard format `- [ ] **Track:` or the legacy format `## [ ] Track:`.
     -   For each track, resolve and read its **Implementation Plan** (using **Universal File Resolution Protocol** via the track's index file).
+    -   **Handle Missing Plans:** If a track's plan file is missing, note it as "Plan not found" in the status report and continue with other tracks.
 
 ### 2.2 Parse and Summarize Plan
 1.  **Parse Content:**
@@ -42,16 +44,26 @@ CRITICAL: You must validate the success of every tool call. If any tool call fai
     -   The total number of major phases.
     -   The total number of tasks.
     -   The number of tasks completed, in progress, and pending.
+    -   **Project Status Determination:**
+        *   🔴 "Blocked" - If any task is explicitly marked with "BLOCKED" keyword
+        *   🟡 "In Progress" - If any task is marked as "IN PROGRESS"
+        *   🟢 "Completed" - If all tasks are marked as "COMPLETED"
+        *   ⚪ "Not Started" - If all tasks are marked as "PENDING"
+    -   **Status Indicators:** Use emoji circles to represent status:
+        *   ⚪ "Not Started" / "Pending"
+        *   🟡 "In Progress"
+        *   🟢 "Completed"
+        *   🔴 "Blocked"
 
 ### 2.3 Present Status Overview
-1.  **Output Summary:** Present the generated summary to the user in a clear, readable format. The status report must include:
+1.  **Output Summary:** Present the generated summary to the user in a clear, readable format with status emoji indicators. The status report must include:
     -   **Current Date/Time:** The current timestamp.
-    -   **Project Status:** A high-level summary of progress (e.g., "On Track", "Behind Schedule", "Blocked").
-    -   **Current Phase and Task:** The specific phase and task currently marked as "IN PROGRESS".
-    -   **Next Action Needed:** The next task listed as "PENDING".
-    -   **Blockers:** Any items explicitly marked as blockers in the plan.
+    -   **Project Status:** Use appropriate emoji (⚪/🟡/🟢/🔴) followed by status text based on the determination criteria in section 2.2.
+    -   **Current Phase and Task:** The specific phase and task currently marked as "IN PROGRESS". If multiple tracks have "IN PROGRESS" tasks, list all of them grouped by track with 🟡 prefix.
+    -   **Next Action Needed:** The next task listed as "PENDING" for each active track with ⚪ prefix.
+    -   **Blockers:** Any items explicitly marked as blockers in the plan with 🔴 prefix.
     -   **Phases (total):** The total number of major phases.
     -   **Tasks (total):** The total number of tasks.
-    -   **Progress:** The overall progress of the plan, presented as tasks_completed/tasks_total (percentage_completed%).
+    -   **Progress:** The overall progress of the plan, presented as tasks_completed/tasks_total (percentage_completed%) with appropriate emoji indicator.
 
 """
