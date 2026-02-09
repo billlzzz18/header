@@ -96,6 +96,7 @@ If the index file is missing or the link is absent, use the standard default pat
 
 Verification confirms structural expectation, not task success.  
 Failure to verify does NOT terminate work by itself.
+
 ---
 
 ## Standard Default Paths (Project)
@@ -195,6 +196,7 @@ To preserve focus and reduce noise:
 - Treat context as a working surface, not memory.
 
 ---
+
 ## Command Readiness
 
 This instruction set prepares the environment for command-driven execution.
