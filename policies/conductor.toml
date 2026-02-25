@@ -2,7 +2,7 @@
 [[rule]]
 toolName = ["write_file", "replace"]
 priority = 100
-decision = "allow"
+decision = "ask_user"
 modes = ["plan"]
 argsPattern = '"(?:file_path|path)":"conductor/[^"]*"'
 
@@ -10,6 +10,6 @@ argsPattern = '"(?:file_path|path)":"conductor/[^"]*"'
 [[rule]]
 toolName = "run_shell_command"
 commandPrefix = ["git status", "git diff", "ls", "mkdir", "cp", "git init", "git add", "git commit"]
-decision = "allow"
+decision = "ask_user"
 priority = 100
 modes = ["plan"]
