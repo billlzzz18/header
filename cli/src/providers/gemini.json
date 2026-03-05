@@ -1,0 +1,16 @@
+{
+  "platform": "gemini",
+  "displayName": "Gemini CLI",
+  "contextFile": "GEMINI.md",
+  "target": {
+    "mode": "project", 
+    "global_path": "~/.gemini",
+    "project_path": ".gemini"
+  },
+  "mapping": {
+    "agents": "agents",
+    "skills": "skills",
+    "hooks": "hooks",
+    "commands": "commands"
+  }
+}
