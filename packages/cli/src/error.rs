@@ -12,7 +12,7 @@
       ExecutionError(String),
 
       #[error("Git error: {0}")]
-      GitError(#[from] git2::Error),
+      GitError(String),
 
       #[error("Provider error: {0}")]
       ProviderError(String),
