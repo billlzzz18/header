@@ -177,6 +177,27 @@ enum Commands {
 
     /// List all agents that have a skills directory
     Agents,
+
+    /// MCP utilities
+    Mcp {
+        #[command(subcommand)]
+        command: McpCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum McpCommands {
+    /// Show MCP help and available groups
+    Help,
+
+    /// Check MCP package presence and build output
+    Check,
+
+    /// List MCP tools by group (fs, git, project, header, all)
+    List {
+        #[arg(long)]
+        group: Option<String>,
+    },
 }
 
 /* ================= MAIN ================= */
@@ -220,6 +241,7 @@ fn main() -> Result<()> {
         Commands::Uninstall { agent, skill } => cmd_uninstall(agent, skill),
         Commands::List => cmd_list(),
         Commands::Agents => cmd_agents(),
+        Commands::Mcp { command } => cmd_mcp(command),
     }
 }
 
@@ -245,6 +267,120 @@ fn show_banner() {
     println!();
     println!("{}", style(TAGLINE).italic().yellow());
     println!();
+}
+
+/* ================= MCP COMMANDS ================= */
+
+fn cmd_mcp(command: McpCommands) -> Result<()> {
+    match command {
+        McpCommands::Help => cmd_mcp_help(),
+        McpCommands::Check => cmd_mcp_check(),
+        McpCommands::List { group } => cmd_mcp_list(group.as_deref()),
+    }
+}
+
+fn cmd_mcp_help() -> Result<()> {
+    println!("MCP commands:");
+    println!("  bl mcp help");
+    println!("  bl mcp check");
+    println!("  bl mcp list --group <fs|git|project|header|all>");
+    println!();
+    println!("MCP groups:");
+    println!("  fs       File system tools");
+    println!("  git      Git tools");
+    println!("  project  Project analysis tools");
+    println!("  header   Header workflow tools");
+    println!("  all      All tools");
+    Ok(())
+}
+
+fn cmd_mcp_check() -> Result<()> {
+    let pkg_dir = Path::new("packages").join("header-mcp");
+    let cargo_toml = pkg_dir.join("Cargo.toml");
+    let bin_debug = Path::new("target").join("debug").join(if cfg!(windows) {
+        "header.exe"
+    } else {
+        "header"
+    });
+
+    if cargo_toml.exists() {
+        println!("{} MCP package found at {}", CHECKMARK, pkg_dir.display());
+    } else {
+        println!("{} MCP package not found at {}", CROSS, pkg_dir.display());
+    }
+
+    if bin_debug.exists() {
+        println!("{} MCP binary found at {}", CHECKMARK, bin_debug.display());
+    } else {
+        println!(
+            "{} MCP binary not found (build with `cargo build -p header-unified`)",
+            WARN
+        );
+    }
+
+    Ok(())
+}
+
+fn cmd_mcp_list(group: Option<&str>) -> Result<()> {
+    let group = group.unwrap_or("all");
+
+    let fs_tools = [
+        "fs_file_exists",
+        "fs_read_file",
+        "fs_write_file",
+        "fs_append_file",
+        "fs_create_directory",
+        "fs_list_directory",
+        "fs_copy_file",
+        "fs_delete",
+    ];
+
+    let git_tools = [
+        "git_init",
+        "git_status",
+        "git_add_commit",
+        "git_list_tracked",
+    ];
+
+    let project_tools = ["project_detect_maturity", "project_scan_files"];
+
+    let header_tools = [
+        "header_read_state",
+        "header_write_state",
+        "header_generate_track_id",
+        "header_create_track_metadata",
+        "header_create_index",
+        "header_create_tracks_registry",
+    ];
+
+    match group {
+        "fs" => print_tools("fs", &fs_tools),
+        "git" => print_tools("git", &git_tools),
+        "project" => print_tools("project", &project_tools),
+        "header" => print_tools("header", &header_tools),
+        "all" => {
+            print_tools("fs", &fs_tools);
+            print_tools("git", &git_tools);
+            print_tools("project", &project_tools);
+            print_tools("header", &header_tools);
+        }
+        _ => {
+            println!(
+                "{} Unknown group '{}'. Use --group fs|git|project|header|all",
+                WARN, group
+            );
+        }
+    }
+
+    Ok(())
+}
+
+fn print_tools(group: &str, tools: &[&str]) {
+    println!();
+    println!("{}:", group);
+    for name in tools {
+        println!("  - {}", name);
+    }
 }
 
 /* ================= INIT COMMAND ================= */
