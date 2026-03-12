@@ -857,21 +857,33 @@ fn is_git_repo(path: &Path) -> Result<bool> {
 }
 
 fn init_git_repo(path: &Path) -> Result<()> {
-    Command::new("git")
+    let init_status = Command::new("git")
         .arg("init")
         .current_dir(path)
         .status()
         .context("git init failed")?;
-    Command::new("git")
+    if !init_status.success() {
+        bail!("git init exited with non-zero status");
+    }
+
+    let add_status = Command::new("git")
         .arg("add")
         .arg(".")
         .current_dir(path)
         .status()
         .context("git add failed")?;
-    Command::new("git")
+    if !add_status.success() {
+        bail!("git add exited with non-zero status");
+    }
+
+    let commit_status = Command::new("git")
         .args(&["commit", "-m", "Initial commit from Bl1nk template"])
         .current_dir(path)
         .status()
+        .context("git commit failed")?;
+    if !commit_status.success() {
+        bail!("git commit exited with non-zero status");
+    }
         .context("git commit failed")?;
     Ok(())
 }
