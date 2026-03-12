@@ -784,7 +784,7 @@ fn cmd_install(
     #[cfg(windows)]
     {
         // On Windows, create a junction or directory symlink? For simplicity, copy.
-        fs::copy(&global_dest, &link_path)?;
+        copy_dir_all(&global_dest, &link_path)?;
     }
 
     println!("Installed {skill_name} for {agent}");
