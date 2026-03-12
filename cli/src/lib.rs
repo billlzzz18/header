@@ -1,7 +1,7 @@
   // src/lib.rs - BL1NK Library Modules (ไม่แก้ไข main.rs)
 
   // BL1NK Execution Engine
-  pub mod blink;
+  // pub mod blink; // Enable after adding cli/src/blink.rs (or blink/mod.rs)
 
   // Shared Configuration
   pub mod config;
