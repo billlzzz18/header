@@ -27,6 +27,7 @@ pub struct GitAddCommitParams {
     pub message: String,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct GitCheckIgnoreParams {
     /// Repository path
@@ -128,7 +129,11 @@ pub async fn git_status(path: &str) -> Result<GitStatusResult> {
     })
 }
 
-pub async fn git_add_commit(path: &str, files: &[String], message: &str) -> Result<GitCommitResult> {
+pub async fn git_add_commit(
+    path: &str,
+    files: &[String],
+    message: &str,
+) -> Result<GitCommitResult> {
     // Stage files
     let mut add_args = vec!["add"];
     let file_refs: Vec<&str> = files.iter().map(|s| s.as_str()).collect();
@@ -139,9 +144,7 @@ pub async fn git_add_commit(path: &str, files: &[String], message: &str) -> Resu
     run_git(&["commit", "-m", message], path).await?;
 
     // Get commit hash
-    let hash = run_git(&["rev-parse", "--short", "HEAD"], path)
-        .await
-        .ok();
+    let hash = run_git(&["rev-parse", "--short", "HEAD"], path).await.ok();
 
     Ok(GitCommitResult {
         success: true,
@@ -151,11 +154,7 @@ pub async fn git_add_commit(path: &str, files: &[String], message: &str) -> Resu
 }
 
 pub async fn git_list_tracked(path: &str) -> Result<GitListTrackedResult> {
-    let output = run_git(
-        &["ls-files", "--exclude-standard", "-co"],
-        path,
-    )
-    .await?;
+    let output = run_git(&["ls-files", "--exclude-standard", "-co"], path).await?;
 
     let files: Vec<String> = output
         .lines()

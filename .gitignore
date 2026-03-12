@@ -205,7 +205,9 @@ __marimo__/
 # Genkit
 .genkit/
 
-# Conductor
+# header
 tmp/
 
 /.gemini/tmp/
+.codex/
+

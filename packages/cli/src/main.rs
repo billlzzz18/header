@@ -1,18 +1,18 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use clap::{Parser, Subcommand};
 use console::{style, Emoji};
 use dialoguer::{theme::ColorfulTheme, Select};
 use dirs::home_dir;
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::blocking::Client;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::env;
 use std::fs::{self, File};
 use std::io::{Cursor, Read, Seek, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use tempfile::{tempdir, TempDir};
+use tempfile::tempdir;
 use zip::ZipArchive;
 
 #[cfg(unix)]
@@ -32,7 +32,6 @@ const BANNER: &str = r"
 ██████╔╝    ███████╗  ██║       ██║ ╚████║     ██║  ██╗
 ╚═════╝     ╚══════╝  ╚═╝       ╚═╝  ╚═══╝     ╚═╝  ╚═╝
 ";
-
 
 const TAGLINE: &str = "Bl1nk Team Kit - Spec-Driven Development Toolkit";
 
@@ -87,10 +86,8 @@ lazy_static::lazy_static! {
     };
 }
 
-const SCRIPT_TYPE_CHOICES: &[(&str, &str)] = &[
-    ("sh", "POSIX Shell (bash/zsh)"),
-    ("ps", "PowerShell"),
-];
+const SCRIPT_TYPE_CHOICES: &[(&str, &str)] =
+    &[("sh", "POSIX Shell (bash/zsh)"), ("ps", "PowerShell")];
 
 /* ================= CLI ================= */
 
@@ -173,10 +170,7 @@ enum Commands {
     },
 
     /// Uninstall a skill from an agent
-    Uninstall {
-        agent: String,
-        skill: String,
-    },
+    Uninstall { agent: String, skill: String },
 
     /// List all globally installed skills
     List,
@@ -236,16 +230,16 @@ fn show_banner() {
     let lines: Vec<&str> = BANNER.trim().split('\n').collect();
     let colors = [
         console::Color::Magenta,
-        console::Color::BrightMagenta,
+        console::Color::Magenta,
         console::Color::Cyan,
-        console::Color::BrightCyan,
-        console::Color::BrightMagenta,
+        console::Color::Cyan,
+        console::Color::Magenta,
         console::Color::Magenta,
     ];
 
     for (i, line) in lines.iter().enumerate() {
         let color = colors[i % colors.len()];
-        println!("{}", style(*line).color(color).bold());
+        println!("{}", style(*line).fg(color).bold());
     }
 
     println!();
@@ -275,7 +269,9 @@ fn cmd_init(
     } else if let Some(name) = project_name {
         (std::env::current_dir()?.join(name), false)
     } else {
-        anyhow::bail!("Must specify either a project name, use '.' for current directory, or use --here flag");
+        anyhow::bail!(
+            "Must specify either a project name, use '.' for current directory, or use --here flag"
+        );
     };
 
     if !is_current_dir && project_path.exists() {
@@ -306,8 +302,20 @@ fn cmd_init(
 
     // Print setup info
     println!("{} Bl1nk Project Setup", style("▶").magenta());
-    println!("  Project:      {}", style(project_path.file_name().unwrap_or_default().to_string_lossy()).green());
-    println!("  Working path: {}", style(std::env::current_dir()?.display()).dim());
+    println!(
+        "  Project:      {}",
+        style(
+            project_path
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+        )
+        .green()
+    );
+    println!(
+        "  Working path: {}",
+        style(std::env::current_dir()?.display()).dim()
+    );
     if !is_current_dir {
         println!("  Target path:  {}", style(project_path.display()).dim());
     }
@@ -316,13 +324,20 @@ fn cmd_init(
     // Check git if needed
     let git_available = if !no_git { check_tool("git") } else { false };
     if !no_git && !git_available {
-        println!("{} Git not found - will skip repository initialization", WARN);
+        println!(
+            "{} Git not found - will skip repository initialization",
+            WARN
+        );
     }
 
     // AI assistant selection
     let selected_ai = match ai {
         Some(a) if AGENT_CONFIG.contains_key(a.as_str()) => a,
-        Some(a) => anyhow::bail!("Invalid AI assistant '{}'. Choose from: {}", a, AGENT_CONFIG.keys().cloned().collect::<Vec<_>>().join(", ")),
+        Some(a) => anyhow::bail!(
+            "Invalid AI assistant '{}'. Choose from: {}",
+            a,
+            AGENT_CONFIG.keys().cloned().collect::<Vec<_>>().join(", ")
+        ),
         None => {
             let agents: Vec<&str> = AGENT_CONFIG.keys().copied().collect();
             let selection = Select::with_theme(&ColorfulTheme::default())
@@ -360,19 +375,35 @@ fn cmd_init(
         }
     };
 
-    println!("{} AI assistant: {}", CHECKMARK, style(&selected_ai).magenta());
-    println!("{} Script type:  {}", CHECKMARK, style(&selected_script).magenta());
+    println!(
+        "{} AI assistant: {}",
+        CHECKMARK,
+        style(&selected_ai).magenta()
+    );
+    println!(
+        "{} Script type:  {}",
+        CHECKMARK,
+        style(&selected_script).magenta()
+    );
     println!();
 
     // Download and extract template
-    let github_token = github_token.or_else(|| env::var("GH_TOKEN").ok()).or_else(|| env::var("GITHUB_TOKEN").ok());
+    let github_token = github_token
+        .or_else(|| env::var("GH_TOKEN").ok())
+        .or_else(|| env::var("GITHUB_TOKEN").ok());
     let client = reqwest::blocking::ClientBuilder::new()
         .danger_accept_invalid_certs(skip_tls)
         .build()?;
 
     // Show progress steps
     println!("{} Fetch latest release...", INFO);
-    let (zip_path, release_tag, asset_name) = download_template(&client, &selected_ai, &selected_script, &github_token, debug)?;
+    let (zip_path, _release_tag, asset_name) = download_template(
+        &client,
+        &selected_ai,
+        &selected_script,
+        &github_token,
+        debug,
+    )?;
     println!("{} Downloaded: {}", CHECKMARK, asset_name);
 
     println!("{} Extracting template...", INFO);
@@ -406,7 +437,10 @@ fn cmd_init(
     if let Some(cfg) = AGENT_CONFIG.get(selected_ai.as_str()) {
         println!();
         println!("{} Agent Folder Security", style("⚠").yellow());
-        println!("   Some agents may store credentials in {}.", style(cfg.folder).cyan());
+        println!(
+            "   Some agents may store credentials in {}.",
+            style(cfg.folder).cyan()
+        );
         println!("   Consider adding it to .gitignore to prevent leakage.");
     }
 
@@ -414,24 +448,48 @@ fn cmd_init(
     println!();
     println!("{} Next Steps", style("▶").magenta());
     if !is_current_dir {
-        println!("1. Go to the project folder: cd {}", style(project_path.display()).cyan());
+        println!(
+            "1. Go to the project folder: cd {}",
+            style(project_path.display()).cyan()
+        );
     } else {
         println!("1. You're already in the project directory!");
     }
     println!("2. Start using slash commands with your AI agent:");
-    println!("   2.1 {} - Establish project principles", style("/bl: constitution").cyan());
-    println!("   2.2 {} - Create baseline specification", style("/bl: specify").cyan());
-    println!("   2.3 {} - Create implementation plan", style("/bl: plan").cyan());
-    println!("   2.4 {} - Generate actionable tasks", style("/bl: tasks").cyan());
-    println!("   2.5 {} - Execute implementation", style("/bl: implement").cyan());
+    println!(
+        "   2.1 {} - Establish project principles",
+        style("/bl: constitution").cyan()
+    );
+    println!(
+        "   2.2 {} - Create baseline specification",
+        style("/bl: specify").cyan()
+    );
+    println!(
+        "   2.3 {} - Create implementation plan",
+        style("/bl: plan").cyan()
+    );
+    println!(
+        "   2.4 {} - Generate actionable tasks",
+        style("/bl: tasks").cyan()
+    );
+    println!(
+        "   2.5 {} - Execute implementation",
+        style("/bl: implement").cyan()
+    );
 
     // Enhancement commands – updated to use /bl: prefix
     println!();
     println!("{} Enhancement Commands", style("▶").magenta());
     println!("   Optional commands to improve quality:");
-    println!("   ○ {} - Ask clarifying questions", style("/bl: clarify").cyan());
+    println!(
+        "   ○ {} - Ask clarifying questions",
+        style("/bl: clarify").cyan()
+    );
     println!("   ○ {} - Consistency report", style("/bl: analyze").cyan());
-    println!("   ○ {} - Quality checklists", style("/bl: checklist").cyan());
+    println!(
+        "   ○ {} - Quality checklists",
+        style("/bl: checklist").cyan()
+    );
 
     Ok(())
 }
@@ -454,7 +512,11 @@ fn cmd_onboard() -> Result<()> {
     }
 
     fs::write(&output_path, ONBOARDING_TEMPLATE)?;
-    println!("{} Created {}", CHECKMARK, style(output_path.display()).green());
+    println!(
+        "{} Created {}",
+        CHECKMARK,
+        style(output_path.display()).green()
+    );
     println!("\nNext steps:");
     println!("1. Open the file and follow the instructions for the agent.");
     println!("2. After analysis, start creating specs with /bl: specify.");
@@ -469,22 +531,48 @@ fn cmd_check() -> Result<()> {
     println!();
 
     let git = check_tool("git");
-    println!("  {} Git: {}", if git { CHECKMARK } else { CROSS }, if git { "available" } else { "not found" });
+    println!(
+        "  {} Git: {}",
+        if git { CHECKMARK } else { CROSS },
+        if git { "available" } else { "not found" }
+    );
 
     for (key, cfg) in AGENT_CONFIG.iter() {
         if cfg.requires_cli {
             let found = check_tool(key);
-            println!("  {} {}: {}", if found { CHECKMARK } else { CROSS }, cfg.name, if found { "available" } else { "not found" });
+            println!(
+                "  {} {}: {}",
+                if found { CHECKMARK } else { CROSS },
+                cfg.name,
+                if found { "available" } else { "not found" }
+            );
         } else {
-            println!("  {} {}: {} (IDE-based)", INFO, cfg.name, style("no CLI check").dim());
+            println!(
+                "  {} {}: {} (IDE-based)",
+                INFO,
+                cfg.name,
+                style("no CLI check").dim()
+            );
         }
     }
 
     let code = check_tool("code");
-    println!("  {} Visual Studio Code: {}", if code { CHECKMARK } else { CROSS }, if code { "available" } else { "not found" });
+    println!(
+        "  {} Visual Studio Code: {}",
+        if code { CHECKMARK } else { CROSS },
+        if code { "available" } else { "not found" }
+    );
 
     let code_insiders = check_tool("code-insiders");
-    println!("  {} VS Code Insiders: {}", if code_insiders { CHECKMARK } else { CROSS }, if code_insiders { "available" } else { "not found" });
+    println!(
+        "  {} VS Code Insiders: {}",
+        if code_insiders { CHECKMARK } else { CROSS },
+        if code_insiders {
+            "available"
+        } else {
+            "not found"
+        }
+    );
 
     println!();
     println!("{} Bl1nk CLI is ready to use!", style("✔").green());
@@ -661,7 +749,8 @@ fn set_executable_permissions(path: &Path) -> Result<()> {
     }
     for entry in walkdir::WalkDir::new(&scripts_dir) {
         let entry = entry?;
-        if entry.file_type().is_file() && entry.path().extension().map_or(false, |ext| ext == "sh") {
+        if entry.file_type().is_file() && entry.path().extension().map_or(false, |ext| ext == "sh")
+        {
             let mut perms = fs::metadata(entry.path())?.permissions();
             let mode = perms.mode();
             let new_mode = mode
@@ -707,7 +796,10 @@ fn download_template(
     // Changed to bl1nk-bot/skill-cli as requested
     let repo_owner = "bl1nk-bot";
     let repo_name = "skill-cli";
-    let api_url = format!("https://api.github.com/repos/{}/{}/releases/latest", repo_owner, repo_name);
+    let api_url = format!(
+        "https://api.github.com/repos/{}/{}/releases/latest",
+        repo_owner, repo_name
+    );
 
     let mut headers = reqwest::header::HeaderMap::new();
     headers.insert("User-Agent", "bl1nk-cli/rust".parse().unwrap());
@@ -762,17 +854,28 @@ fn download_template(
         .unwrap_or(0);
 
     let pb = ProgressBar::new(total_size);
-    pb.set_style(ProgressStyle::default_bar()
-        .template("{msg} {bar:40.magenta/blue} {bytes}/{total_bytes} ({eta})")?
-        .progress_chars("=>-"));
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("{msg} {bar:40.magenta/blue} {bytes}/{total_bytes} ({eta})")?
+            .progress_chars("=>-"),
+    );
 
     let mut data = Vec::new();
     let mut stream = response;
-    let mut downloaded = 0;
-    while let Some(chunk) = stream.chunk().context("Error reading download stream")? {
-        data.extend_from_slice(&chunk);
-        downloaded += chunk.len() as u64;
-        pb.set_position(downloaded);
+    let mut downloaded = 0u64;
+    let mut buf = [0u8; 8192];
+    loop {
+        let n = stream
+            .read(&mut buf)
+            .context("Error reading download stream")?;
+        if n == 0 {
+            break;
+        }
+        data.extend_from_slice(&buf[..n]);
+        downloaded += n as u64;
+        if total_size > 0 {
+            pb.set_position(downloaded);
+        }
     }
     pb.finish_and_clear();
 
@@ -813,7 +916,10 @@ fn extract_template(zip_path: &Path, dest: &Path, flatten_nested: bool) -> Resul
 
         if items.len() == 1 && items[0].is_dir() {
             let nested = items[0].clone();
-            let temp_move = dest.parent().unwrap().join(format!("{}_temp", dest.file_name().unwrap().to_string_lossy()));
+            let temp_move = dest.parent().unwrap().join(format!(
+                "{}_temp",
+                dest.file_name().unwrap().to_string_lossy()
+            ));
             fs::rename(&nested, &temp_move)?;
             fs::remove_dir(dest)?;
             fs::rename(&temp_move, dest)?;
@@ -919,13 +1025,11 @@ fn agent_dir(agent: &str) -> PathBuf {
     home_dir().unwrap().join(format!(".{}/skills", agent))
 }
 
-fn download_repo(
-    owner: &str,
-    repo: &str,
-    reference: &str,
-    dest: &Path,
-) -> Result<PathBuf> {
-    let url = format!("https://codeload.github.com/{}/{}/zip/{}", owner, repo, reference);
+fn download_repo(owner: &str, repo: &str, reference: &str, dest: &Path) -> Result<PathBuf> {
+    let url = format!(
+        "https://codeload.github.com/{}/{}/zip/{}",
+        owner, repo, reference
+    );
 
     let response = reqwest::blocking::get(url)?.bytes()?;
     let reader = Cursor::new(response.to_vec());
@@ -933,18 +1037,12 @@ fn download_repo(
 
     safe_extract(&mut archive, dest)?;
 
-    let first = fs::read_dir(dest)?
-        .next()
-        .context("Empty archive")??
-        .path();
+    let first = fs::read_dir(dest)?.next().context("Empty archive")??.path();
 
     Ok(first)
 }
 
-pub fn safe_extract<R: Read + Seek>(
-    archive: &mut ZipArchive<R>,
-    dest: &Path,
-) -> Result<()> {
+pub fn safe_extract<R: Read + Seek>(archive: &mut ZipArchive<R>, dest: &Path) -> Result<()> {
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
         let outpath = dest.join(file.name());
@@ -993,10 +1091,7 @@ fn validate_skill_name(name: &str) -> Result<()> {
     Ok(())
 }
 
-fn resolve_source(
-    repo: Option<String>,
-    url: Option<String>,
-) -> Result<(String, String)> {
+fn resolve_source(repo: Option<String>, url: Option<String>) -> Result<(String, String)> {
     if let Some(repo) = repo {
         let parts: Vec<_> = repo.split('/').collect();
         if parts.len() != 2 {

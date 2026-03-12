@@ -21,6 +21,7 @@ pub struct ScanProjectFilesParams {
     pub respect_ignore: Option<bool>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct GetFileSizeParams {
     /// File path to check
@@ -87,14 +88,25 @@ pub async fn detect_project_maturity(path: &str) -> Result<ProjectMaturityResult
             }
         }
     }
-    if has_svn { indicators.push("Found .svn directory".into()); }
-    if has_hg  { indicators.push("Found .hg directory".into()); }
+    if has_svn {
+        indicators.push("Found .svn directory".into());
+    }
+    if has_hg {
+        indicators.push("Found .hg directory".into());
+    }
 
     // ── ตรวจ manifest files ──
     let manifest_names = [
-        "package.json", "pom.xml", "requirements.txt", "go.mod",
-        "Cargo.toml", "build.gradle", "setup.py", "pyproject.toml",
-        "Gemfile", "composer.json",
+        "package.json",
+        "pom.xml",
+        "requirements.txt",
+        "go.mod",
+        "Cargo.toml",
+        "build.gradle",
+        "setup.py",
+        "pyproject.toml",
+        "Gemfile",
+        "composer.json",
     ];
     let mut detected_manifests = Vec::new();
     for name in &manifest_names {
@@ -116,10 +128,11 @@ pub async fn detect_project_maturity(path: &str) -> Result<ProjectMaturityResult
                 .into_iter()
                 .filter_map(|e| e.ok())
                 .any(|e| {
-                    let ext = e.path().extension()
-                        .and_then(|x| x.to_str())
-                        .unwrap_or("");
-                    matches!(ext, "rs"|"ts"|"js"|"py"|"go"|"java"|"kt"|"swift"|"cs"|"rb")
+                    let ext = e.path().extension().and_then(|x| x.to_str()).unwrap_or("");
+                    matches!(
+                        ext,
+                        "rs" | "ts" | "js" | "py" | "go" | "java" | "kt" | "swift" | "cs" | "rb"
+                    )
                 });
 
             if has_code {
@@ -130,7 +143,9 @@ pub async fn detect_project_maturity(path: &str) -> Result<ProjectMaturityResult
     }
 
     // ── ตัดสิน maturity ──
-    let is_brownfield = has_git || has_svn || has_hg
+    let is_brownfield = has_git
+        || has_svn
+        || has_hg
         || !detected_manifests.is_empty()
         || !detected_source_dirs.is_empty();
 
@@ -155,7 +170,7 @@ pub async fn detect_project_maturity(path: &str) -> Result<ProjectMaturityResult
 pub async fn scan_project_files(
     path: &str,
     max_depth: usize,
-    respect_ignore: bool,
+    _respect_ignore: bool,
 ) -> Result<ProjectScanResult> {
     let root = Path::new(path);
     let mut manifest_files = Vec::new();
@@ -164,21 +179,52 @@ pub async fn scan_project_files(
     let mut total = 0usize;
 
     let manifest_names: std::collections::HashSet<&str> = [
-        "package.json", "pom.xml", "requirements.txt", "go.mod",
-        "Cargo.toml", "build.gradle", "setup.py", "pyproject.toml",
-        "Gemfile", "composer.json",
-    ].iter().copied().collect();
+        "package.json",
+        "pom.xml",
+        "requirements.txt",
+        "go.mod",
+        "Cargo.toml",
+        "build.gradle",
+        "setup.py",
+        "pyproject.toml",
+        "Gemfile",
+        "composer.json",
+    ]
+    .iter()
+    .copied()
+    .collect();
 
     let config_names: std::collections::HashSet<&str> = [
-        ".env", ".env.example", "docker-compose.yml", "Dockerfile",
-        ".gitignore", ".geminiignore", "README.md", "CHANGELOG.md",
-    ].iter().copied().collect();
+        ".env",
+        ".env.example",
+        "docker-compose.yml",
+        "Dockerfile",
+        ".gitignore",
+        ".geminiignore",
+        "README.md",
+        "CHANGELOG.md",
+    ]
+    .iter()
+    .copied()
+    .collect();
 
     // Directories to skip
     let skip_dirs: std::collections::HashSet<&str> = [
-        "node_modules", ".m2", "build", "dist", "bin", "target",
-        ".git", ".idea", ".vscode", "__pycache__", ".pytest_cache",
-    ].iter().copied().collect();
+        "node_modules",
+        ".m2",
+        "build",
+        "dist",
+        "bin",
+        "target",
+        ".git",
+        ".idea",
+        ".vscode",
+        "__pycache__",
+        ".pytest_cache",
+    ]
+    .iter()
+    .copied()
+    .collect();
 
     let walker = walkdir::WalkDir::new(root)
         .max_depth(max_depth)
@@ -197,16 +243,30 @@ pub async fn scan_project_files(
         let is_large = size > 1_000_000;
 
         if manifest_names.contains(fname.as_str()) {
-            manifest_files.push(FileInfo { path: fpath.clone(), size_bytes: size, is_large });
+            manifest_files.push(FileInfo {
+                path: fpath.clone(),
+                size_bytes: size,
+                is_large,
+            });
         } else if config_names.contains(fname.as_str()) {
-            config_files.push(FileInfo { path: fpath, size_bytes: size, is_large });
+            config_files.push(FileInfo {
+                path: fpath,
+                size_bytes: size,
+                is_large,
+            });
         }
 
         // Track source dirs
         if entry.file_type().is_file() {
-            let ext = entry.path().extension()
-                .and_then(|x| x.to_str()).unwrap_or("");
-            if matches!(ext, "rs"|"ts"|"js"|"py"|"go"|"java"|"kt"|"swift"|"cs"|"rb") {
+            let ext = entry
+                .path()
+                .extension()
+                .and_then(|x| x.to_str())
+                .unwrap_or("");
+            if matches!(
+                ext,
+                "rs" | "ts" | "js" | "py" | "go" | "java" | "kt" | "swift" | "cs" | "rb"
+            ) {
                 if let Some(parent) = entry.path().parent() {
                     source_dirs.insert(parent.to_string_lossy().to_string());
                 }

@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use chrono::Utc;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct ReadSetupStateParams {
-    /// Base directory of conductor folder (usually workspace root)
+    /// Base directory of header folder (usually workspace root)
     pub workspace_path: String,
 }
 
@@ -38,7 +38,7 @@ pub struct CreateTrackMetadataParams {
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
-pub struct CreateConductorIndexParams {
+pub struct CreateHeaderIndexParams {
     /// Workspace root
     pub workspace_path: String,
 }
@@ -79,7 +79,7 @@ pub struct TrackIdResult {
 // ─── Implementations ────────────────────────────────────────────────────────
 
 pub async fn read_setup_state(workspace_path: &str) -> Result<SetupStateResult> {
-    let state_path = format!("{}/conductor/setup_state.json", workspace_path);
+    let state_path = format!("{}/header/setup_state.json", workspace_path);
     let p = std::path::Path::new(&state_path);
 
     if !p.exists() {
@@ -94,8 +94,8 @@ pub async fn read_setup_state(workspace_path: &str) -> Result<SetupStateResult> 
         .await
         .context("Cannot read setup_state.json")?;
 
-    let json: serde_json::Value = serde_json::from_str(&content)
-        .context("setup_state.json is invalid JSON")?;
+    let json: serde_json::Value =
+        serde_json::from_str(&content).context("setup_state.json is invalid JSON")?;
 
     let step = json
         .get("last_successful_step")
@@ -110,10 +110,10 @@ pub async fn read_setup_state(workspace_path: &str) -> Result<SetupStateResult> 
 }
 
 pub async fn write_setup_state(workspace_path: &str, step: &str) -> Result<SimpleResult> {
-    let state_path = format!("{}/conductor/setup_state.json", workspace_path);
+    let state_path = format!("{}/header/setup_state.json", workspace_path);
     let content = serde_json::json!({ "last_successful_step": step }).to_string();
 
-    tokio::fs::create_dir_all(format!("{}/conductor", workspace_path)).await?;
+    tokio::fs::create_dir_all(format!("{}/header", workspace_path)).await?;
     tokio::fs::write(&state_path, &content).await?;
 
     Ok(SimpleResult {
@@ -161,7 +161,7 @@ pub async fn create_track_metadata(
         "description": description
     });
 
-    let dir = format!("{}/conductor/{}/{}", workspace_path, tracks_dir, track_id);
+    let dir = format!("{}/header/{}/{}", workspace_path, tracks_dir, track_id);
     tokio::fs::create_dir_all(&dir).await?;
 
     let meta_path = format!("{}/metadata.json", dir);
@@ -180,7 +180,7 @@ pub async fn create_track_metadata(
     })
 }
 
-pub async fn create_conductor_index(workspace_path: &str) -> Result<SimpleResult> {
+pub async fn create_header_index(workspace_path: &str) -> Result<SimpleResult> {
     let content = r#"# Project Context
 
 ## Definition
@@ -197,12 +197,12 @@ pub async fn create_conductor_index(workspace_path: &str) -> Result<SimpleResult
 - [Tracks Directory](./tracks/)
 "#;
 
-    let path = format!("{}/conductor/index.md", workspace_path);
+    let path = format!("{}/header/index.md", workspace_path);
     tokio::fs::write(&path, content).await?;
 
     Ok(SimpleResult {
         success: true,
-        message: "Created conductor/index.md".into(),
+        message: "Created header/index.md".into(),
     })
 }
 
@@ -219,11 +219,11 @@ pub async fn create_tracks_registry(
         id = track_id,
     );
 
-    let path = format!("{}/conductor/tracks.md", workspace_path);
+    let path = format!("{}/header/tracks.md", workspace_path);
     tokio::fs::write(&path, &content).await?;
 
     Ok(SimpleResult {
         success: true,
-        message: format!("Created conductor/tracks.md with track '{}'", track_id),
+        message: format!("Created header/tracks.md with track '{}'", track_id),
     })
 }

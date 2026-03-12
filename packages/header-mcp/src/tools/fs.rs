@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use rmcp::model::Parameters;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -125,7 +124,11 @@ pub async fn file_exists(path: &str) -> Result<FileExistsResult> {
     })
 }
 
-pub async fn read_file(path: &str, head_lines: Option<usize>, tail_lines: Option<usize>) -> Result<ReadFileResult> {
+pub async fn read_file(
+    path: &str,
+    head_lines: Option<usize>,
+    tail_lines: Option<usize>,
+) -> Result<ReadFileResult> {
     let p = Path::new(path);
     let metadata = tokio::fs::metadata(p)
         .await
@@ -243,9 +246,10 @@ pub async fn list_directory(path: &str, recursive: bool) -> Result<ListDirectory
 
         while let Some(entry) = rd.next_entry().await? {
             let meta = entry.metadata().await.ok();
-            let ft = meta.as_ref().map(|m| {
-                if m.is_dir() { "directory" } else { "file" }
-            }).unwrap_or("unknown");
+            let ft = meta
+                .as_ref()
+                .map(|m| if m.is_dir() { "directory" } else { "file" })
+                .unwrap_or("unknown");
 
             entries.push(DirectoryEntry {
                 name: entry.file_name().to_string_lossy().to_string(),

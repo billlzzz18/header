@@ -1,19 +1,19 @@
-use async_trait::async_trait;
 use rmcp::{
-    model::*,
-    protocol::*,
-    server::{RequestContext, RoleServer, ServerHandler, ToolRouter},
-    tool_handler, tool_router, ErrorData,
+    handler::server::router::tool::ToolRouter,
+    handler::server::wrapper::Parameters,
+    model::{CallToolResult, Content, ErrorData},
+    tool, tool_handler, tool_router, ServerHandler,
 };
 use serde_json::json;
 use std::sync::Arc;
 
 use crate::state::ServerState;
-use crate::tools::{conductor, filesystem, git, project};
+use crate::tools::{fs, git, header, project};
 
-pub struct ConductorHandler {
+#[derive(Clone)]
+pub struct HeaderHandler {
     state: Arc<ServerState>,
-    tool_router: ToolRouter,
+    tool_router: ToolRouter<HeaderHandler>,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,8 +21,7 @@ pub struct ConductorHandler {
 // ─────────────────────────────────────────────────────────────────────────────
 
 #[tool_router]
-impl ConductorHandler {
-
+impl HeaderHandler {
     // ══════════════════════════════════════════════════════════════════════
     // FILESYSTEM TOOLS
     // ══════════════════════════════════════════════════════════════════════
@@ -33,14 +32,14 @@ impl ConductorHandler {
     )]
     async fn fs_file_exists(
         &self,
-        params: Parameters<filesystem::FileExistsParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<fs::FileExistsParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
-        let result = filesystem::file_exists(&resolved.to_string_lossy())
+        let result = fs::file_exists(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -49,18 +48,14 @@ impl ConductorHandler {
     )]
     async fn fs_read_file(
         &self,
-        params: Parameters<filesystem::ReadFileParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<fs::ReadFileParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
-        let result = filesystem::read_file(
-            &resolved.to_string_lossy(),
-            p.head_lines,
-            p.tail_lines,
-        )
-        .await
-        .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        let result = fs::read_file(&resolved.to_string_lossy(), p.head_lines, p.tail_lines)
+            .await
+            .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -69,14 +64,14 @@ impl ConductorHandler {
     )]
     async fn fs_write_file(
         &self,
-        params: Parameters<filesystem::WriteFileParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<fs::WriteFileParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
-        let result = filesystem::write_file(&resolved.to_string_lossy(), &p.content)
+        let result = fs::write_file(&resolved.to_string_lossy(), &p.content)
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -85,14 +80,14 @@ impl ConductorHandler {
     )]
     async fn fs_append_file(
         &self,
-        params: Parameters<filesystem::AppendFileParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<fs::AppendFileParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
-        let result = filesystem::append_file(&resolved.to_string_lossy(), &p.content)
+        let result = fs::append_file(&resolved.to_string_lossy(), &p.content)
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -101,14 +96,14 @@ impl ConductorHandler {
     )]
     async fn fs_create_directory(
         &self,
-        params: Parameters<filesystem::CreateDirectoryParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<fs::CreateDirectoryParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
-        let result = filesystem::create_directory(&resolved.to_string_lossy())
+        let result = fs::create_directory(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -117,17 +112,14 @@ impl ConductorHandler {
     )]
     async fn fs_list_directory(
         &self,
-        params: Parameters<filesystem::ListDirectoryParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<fs::ListDirectoryParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
-        let result = filesystem::list_directory(
-            &resolved.to_string_lossy(),
-            p.recursive.unwrap_or(false),
-        )
-        .await
-        .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        let result = fs::list_directory(&resolved.to_string_lossy(), p.recursive.unwrap_or(false))
+            .await
+            .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -136,18 +128,15 @@ impl ConductorHandler {
     )]
     async fn fs_copy_file(
         &self,
-        params: Parameters<filesystem::CopyFileParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<fs::CopyFileParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let src = self.state.resolve(&p.source);
         let dst = self.state.resolve(&p.destination);
-        let result = filesystem::copy_file(
-            &src.to_string_lossy(),
-            &dst.to_string_lossy(),
-        )
-        .await
-        .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        let result = fs::copy_file(&src.to_string_lossy(), &dst.to_string_lossy())
+            .await
+            .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -156,14 +145,14 @@ impl ConductorHandler {
     )]
     async fn fs_delete(
         &self,
-        params: Parameters<filesystem::DeleteFileParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<fs::DeleteFileParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
-        let result = filesystem::delete_file(&resolved.to_string_lossy())
+        let result = fs::delete_file(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -177,13 +166,13 @@ impl ConductorHandler {
     async fn git_init(
         &self,
         params: Parameters<git::GitInitParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
         let result = git::git_init(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -193,13 +182,13 @@ impl ConductorHandler {
     async fn git_status(
         &self,
         params: Parameters<git::GitStatusParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
         let result = git::git_status(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -209,17 +198,13 @@ impl ConductorHandler {
     async fn git_add_commit(
         &self,
         params: Parameters<git::GitAddCommitParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
-        let result = git::git_add_commit(
-            &resolved.to_string_lossy(),
-            &p.files,
-            &p.message,
-        )
-        .await
-        .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        let result = git::git_add_commit(&resolved.to_string_lossy(), &p.files, &p.message)
+            .await
+            .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -229,80 +214,78 @@ impl ConductorHandler {
     async fn git_list_tracked(
         &self,
         params: Parameters<git::GitListTrackedParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
         let result = git::git_list_tracked(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // CONDUCTOR STATE TOOLS
+    // header STATE TOOLS
     // ══════════════════════════════════════════════════════════════════════
 
     #[tool(
-        name = "conductor_read_state",
-        description = "Read the conductor/setup_state.json file to determine setup progress and which step to resume from"
+        name = "header_read_state",
+        description = "Read the header/setup_state.json file to determine setup progress and which step to resume from"
     )]
-    async fn conductor_read_state(
+    async fn header_read_state(
         &self,
-        params: Parameters<conductor::ReadSetupStateParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<header::ReadSetupStateParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.workspace_path);
-        let result = conductor::read_setup_state(&resolved.to_string_lossy())
+        let result = header::read_setup_state(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
-        name = "conductor_write_state",
-        description = "Write the last_successful_step to conductor/setup_state.json. Call this after each major step completes successfully"
+        name = "header_write_state",
+        description = "Write the last_successful_step to header/setup_state.json. Call this after each major step completes successfully"
     )]
-    async fn conductor_write_state(
+    async fn header_write_state(
         &self,
-        params: Parameters<conductor::WriteSetupStateParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<header::WriteSetupStateParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.workspace_path);
-        let result = conductor::write_setup_state(
-            &resolved.to_string_lossy(),
-            &p.last_successful_step,
-        )
-        .await
-        .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        let result =
+            header::write_setup_state(&resolved.to_string_lossy(), &p.last_successful_step)
+                .await
+                .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
+        respond_json(json!(result))
     }
 
     #[tool(
-        name = "conductor_generate_track_id",
+        name = "header_generate_track_id",
         description = "Generate a unique Track ID from a track description using format: shortname_YYYYMMDD"
     )]
-    async fn conductor_generate_track_id(
+    async fn header_generate_track_id(
         &self,
-        params: Parameters<conductor::GenerateTrackIdParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
-        let result = conductor::generate_track_id(&p.description)
+        params: Parameters<header::GenerateTrackIdParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
+        let result = header::generate_track_id(&p.description)
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
-        name = "conductor_create_track_metadata",
+        name = "header_create_track_metadata",
         description = "Create metadata.json and index.md for a new track in the tracks directory"
     )]
-    async fn conductor_create_track_metadata(
+    async fn header_create_track_metadata(
         &self,
-        params: Parameters<conductor::CreateTrackMetadataParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<header::CreateTrackMetadataParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.workspace_path);
-        let result = conductor::create_track_metadata(
+        let result = header::create_track_metadata(
             &resolved.to_string_lossy(),
             &p.track_id,
             &p.track_type,
@@ -311,36 +294,36 @@ impl ConductorHandler {
         )
         .await
         .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
-        name = "conductor_create_index",
-        description = "Create conductor/index.md as the main project context index file"
+        name = "header_create_index",
+        description = "Create header/index.md as the main project context index file"
     )]
-    async fn conductor_create_index(
+    async fn header_create_index(
         &self,
-        params: Parameters<conductor::CreateConductorIndexParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<header::CreateHeaderIndexParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.workspace_path);
-        let result = conductor::create_conductor_index(&resolved.to_string_lossy())
+        let result = header::create_header_index(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
-        name = "conductor_create_tracks_registry",
-        description = "Create or update conductor/tracks.md with the initial track entry"
+        name = "header_create_tracks_registry",
+        description = "Create or update header/tracks.md with the initial track entry"
     )]
-    async fn conductor_create_tracks_registry(
+    async fn header_create_tracks_registry(
         &self,
-        params: Parameters<conductor::CreateTracksRegistryParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+        params: Parameters<header::CreateTracksRegistryParams>,
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.workspace_path);
-        let result = conductor::create_tracks_registry(
+        let result = header::create_tracks_registry(
             &resolved.to_string_lossy(),
             &p.track_description,
             &p.track_id,
@@ -348,7 +331,7 @@ impl ConductorHandler {
         )
         .await
         .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -362,13 +345,13 @@ impl ConductorHandler {
     async fn project_detect_maturity(
         &self,
         params: Parameters<project::DetectProjectMaturityParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
         let result = project::detect_project_maturity(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
 
     #[tool(
@@ -378,8 +361,8 @@ impl ConductorHandler {
     async fn project_scan_files(
         &self,
         params: Parameters<project::ScanProjectFilesParams>,
-    ) -> Result<serde_json::Value, ErrorData> {
-        let p = params.inner();
+    ) -> Result<CallToolResult, ErrorData> {
+        let p = params.0;
         let resolved = self.state.resolve(&p.path);
         let result = project::scan_project_files(
             &resolved.to_string_lossy(),
@@ -388,8 +371,14 @@ impl ConductorHandler {
         )
         .await
         .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        Ok(json!(result))
+        respond_json(json!(result))
     }
+}
+
+fn respond_json(value: serde_json::Value) -> Result<CallToolResult, ErrorData> {
+    let content =
+        Content::json(value).map_err(|err| ErrorData::internal_error(err.to_string(), None))?;
+    Ok(CallToolResult::success(vec![content]))
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -397,12 +386,12 @@ impl ConductorHandler {
 // ─────────────────────────────────────────────────────────────────────────────
 
 #[tool_handler]
-impl ServerHandler for ConductorHandler {}
+impl ServerHandler for HeaderHandler {}
 
-impl ConductorHandler {
-    pub fn new() -> Self {
+impl HeaderHandler {
+    pub fn new(state: Arc<ServerState>) -> Self {
         Self {
-            state: Arc::new(ServerState::new()),
+            state,
             tool_router: Self::tool_router(),
         }
     }
