@@ -161,7 +161,7 @@ impl HeaderHandler {
         }
 
         let resolved = self.state.resolve(&p.path);
-        let result = filesystem::delete_file(&resolved.to_string_lossy())
+        let result = fs::delete_file(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
         respond_json(json!(result))
