@@ -892,8 +892,8 @@ fn init_git_repo(path: &Path) -> Result<()> {
         .status()
         .context("git commit failed")?;
     if !commit_status.success() {
-        bail!("git commit exited with non-zero status");
-    }
+            eprintln!("{} git commit failed; repository initialized without initial commit", WARN);
+        }
     Ok(())
 }
 
