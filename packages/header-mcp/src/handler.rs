@@ -386,13 +386,20 @@ fn respond_json(value: serde_json::Value) -> Result<CallToolResult, ErrorData> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 #[tool_handler]
-impl ServerHandler for HeaderHandler {}
+impl ServerHandler for ConductorHandler {}
 
-impl HeaderHandler {
-    pub fn new(state: Arc<ServerState>) -> Self {
+impl ConductorHandler {
+    pub fn new() -> Self {
         Self {
-            state,
+            state: Arc::new(ServerState::new()),
             tool_router: Self::tool_router(),
         }
     }
+}
+
+impl Default for ConductorHandler {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 }
