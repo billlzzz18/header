@@ -1036,7 +1036,7 @@ fn download_template(
     }
     pb.finish_and_clear();
 
-    let zip_path = tempdir()?.path().join(&asset.name);
+    let zip_path = std::env::temp_dir().join(format!("bl1nk-{}", asset.name));
     fs::write(&zip_path, data)?;
 
     Ok((zip_path, release.tag_name, asset.name.clone()))
