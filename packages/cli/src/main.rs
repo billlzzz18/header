@@ -776,7 +776,11 @@ fn cmd_install(
     let link_path = agent_root.join(&skill_name);
 
     if link_path.exists() {
-        fs::remove_file(&link_path)?;
+        if link_path.is_dir() {
+            fs::remove_dir_all(&link_path)?;
+        } else {
+            fs::remove_file(&link_path)?;
+        }
     }
 
     #[cfg(unix)]
