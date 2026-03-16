@@ -414,4 +414,8 @@ impl Default for ConductorHandler {
         Self::new()
     }
 }
+impl Default for HeaderHandler {
+    fn default() -> Self {
+        Self::new(Arc::new(ServerState::new()))
+    }
 }
