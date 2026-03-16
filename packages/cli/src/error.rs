@@ -1,4 +1,4 @@
-  // src/errors.rs - Unified Error Handling
+  // src/error.rs - Unified Error Handling
 
   use thiserror::Error;
 
