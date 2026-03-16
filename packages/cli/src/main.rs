@@ -801,7 +801,13 @@ fn cmd_install(
 fn cmd_uninstall(agent: String, skill: String) -> Result<()> {
     let path = agent_dir(&agent).join(skill);
     if path.exists() {
-        fs::remove_file(path)?;
+        if path.is_symlink() {
+            fs::remove_file(&path)?;
+        } else if path.is_dir() {
+            fs::remove_dir_all(&path)?;
+        } else {
+            fs::remove_file(&path)?;
+        }
         println!("Removed");
     } else {
         println!("Skill not found");
