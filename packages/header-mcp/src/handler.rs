@@ -148,8 +148,20 @@ impl HeaderHandler {
         params: Parameters<fs::DeleteFileParams>,
     ) -> Result<CallToolResult, ErrorData> {
         let p = params.0;
+        let requested = std::path::Path::new(&p.path);
+        if requested.is_absolute()
+            || requested
+                .components()
+                .any(|c| matches!(c, std::path::Component::ParentDir))
+        {
+            return Err(ErrorData::internal_error(
+                "Path must be relative to workspace root".to_string(),
+                None,
+            ));
+        }
+
         let resolved = self.state.resolve(&p.path);
-        let result = fs::delete_file(&resolved.to_string_lossy())
+        let result = filesystem::delete_file(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
         respond_json(json!(result))
