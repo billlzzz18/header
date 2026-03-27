@@ -163,6 +163,12 @@ pub async fn read_file(
     let total_lines = all_lines.len();
     let mut truncated = false;
 
+    if head_lines.is_some() && tail_lines.is_some() {
+        return Err(anyhow::anyhow!(
+            "Specify only one of head_lines or tail_lines"
+        ));
+    }
+
     let content = if let Some(n) = head_lines {
         truncated = n < total_lines;
         all_lines[..n.min(total_lines)].join("\n")
