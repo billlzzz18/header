@@ -115,13 +115,20 @@ pub struct SimpleResult {
 
 pub async fn file_exists(path: &str) -> Result<FileExistsResult> {
     let p = Path::new(path);
-    let exists = p.exists();
-    Ok(FileExistsResult {
-        exists,
-        path: path.to_string(),
-        is_file: p.is_file(),
-        is_directory: p.is_dir(),
-    })
+    match tokio::fs::metadata(p).await {
+        Ok(meta) => Ok(FileExistsResult {
+            exists: true,
+            path: path.to_string(),
+            is_file: meta.is_file(),
+            is_directory: meta.is_dir(),
+        }),
+        Err(_) => Ok(FileExistsResult {
+            exists: false,
+            path: path.to_string(),
+            is_file: false,
+            is_directory: false,
+        }),
+    }
 }
 
 pub async fn read_file(
