@@ -136,15 +136,29 @@ pub async fn read_file(
     head_lines: Option<usize>,
     tail_lines: Option<usize>,
 ) -> Result<ReadFileResult> {
-    let p = Path::new(path);
-    let metadata = tokio::fs::metadata(p)
+    let workspace_root = std::env::current_dir()
+        .with_context(|| "Cannot determine workspace root")?
+        .canonicalize()
+        .with_context(|| "Cannot canonicalize workspace root")?;
+
+    let canonical = tokio::fs::canonicalize(path)
+        .await
+        .with_context(|| format!("Cannot resolve '{}'", path))?;
+
+    if !canonical.starts_with(&workspace_root) {
+        return Err(anyhow::anyhow!(
+            "Refusing to read outside workspace: '{}'",
+            path
+        ));
+    }
+
+    let metadata = tokio::fs::metadata(&canonical)
         .await
         .with_context(|| format!("Cannot stat '{}'", path))?;
 
-    let raw = tokio::fs::read_to_string(p)
+    let raw = tokio::fs::read_to_string(&canonical)
         .await
         .with_context(|| format!("Cannot read '{}'", path))?;
-
     let all_lines: Vec<&str> = raw.lines().collect();
     let total_lines = all_lines.len();
     let mut truncated = false;
