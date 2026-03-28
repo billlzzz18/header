@@ -338,10 +338,10 @@ impl HeaderHandler {
     ) -> Result<CallToolResult, ErrorData> {
         let p = params.0;
         let resolved = self.state.resolve(&p.workspace_path);
-        tokio::fs::create_dir_all(resolved.join("conductor"))
+        tokio::fs::create_dir_all(resolved.join("header"))
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        let result = conductor::create_tracks_registry(
+        let result = header::create_tracks_registry(
             &resolved.to_string_lossy(),
             &p.track_description,
             &p.track_id,
