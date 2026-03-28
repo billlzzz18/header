@@ -319,10 +319,10 @@ impl HeaderHandler {
     ) -> Result<CallToolResult, ErrorData> {
         let p = params.0;
         let resolved = self.state.resolve(&p.workspace_path);
-        tokio::fs::create_dir_all(resolved.join("conductor"))
+        tokio::fs::create_dir_all(resolved.join("header"))
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
-        let result = conductor::create_conductor_index(&resolved.to_string_lossy())
+        let result = header::create_header_index(&resolved.to_string_lossy())
             .await
             .map_err(|e| ErrorData::internal_error(e.to_string(), None))?;
         respond_json(json!(result))
